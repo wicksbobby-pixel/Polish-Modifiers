@@ -1,101 +1,127 @@
 # Modifier Rush
 
 A timed drill for Polish noun declension. Each sentence is an English frame. At each blank
-you see a declined Polish determiner + adjective, with the English noun and its Polish
-governor underneath. You pick the Polish noun in the right form from three options, all
-forms of the same noun:
+you see a declined Polish determiner or possessive + adjective, with the English noun and
+its Polish governor underneath. You pick the Polish noun in the right form from three
+options, all forms of the same noun:
 
 > I'm interested in tamtym poprzednim **[horse]** → koń / konia / **koniem**
 
-The modifier and the governor give you the case (the governor settles the syncretic
-modifiers: *tej nowej* is gen., dat. or loc.). The English noun gives you the number.
+The modifier and the governor give you the case. The governor settles syncretic modifiers:
+*tej nowej* is gen., dat. or loc. The English noun gives you the number.
 
 ## Run
 
 Open `index.html` in a browser. It needs no build or server (it uses classic scripts, so it
-works from `file://`).
+works from `file://`). Tests: `npm test` (Node ≥ 18, no dependencies).
 
-A game is 10 sentences. Keys: `1` `2` `3` answer · `Space` continue after a miss · `G` show/hide
-governor hints · `Enter` start / play again · `Esc` back to the home screen.
+| Key | Action |
+|---|---|
+| `Enter` | Start a game / play again |
+| `1` `2` `3` | Answer |
+| `Space` | Continue after a miss |
+| `G` | Show/hide governor hints |
+| `Esc` | Back to the home screen (from a game or the end screen) |
 
-The home screen has a cumulative scorecard: a case × agreement-class grid and every noun
-form you've been asked for, grouped by noun and colour-coded by accuracy. It's saved in
-`localStorage`; a game you quit partway still counts. If storage isn't available (e.g. a
-private window), the scorecard lasts until you reload the page.
+### If Start does nothing
 
-Tests: `npm test` (Node ≥ 18, no dependencies).
+A red banner at the top of the page names what failed. Almost always the cause is a local
+copy that is out of date or incomplete: a stale cached script, or a missing `src/` file.
+Pull the latest code, check that all five files in `src/` are present, and hard-reload
+(Ctrl/Cmd+Shift+R). Asset links carry a `?v=` version, so bump it in `index.html` whenever
+the files change.
+
+## How a game works
+
+- **10 sentences per game,** with 1–2 blanks each. The timer starts at 10 s per blank and
+  shrinks 7% per sentence (floor 3.5 s). Points: 100 per correct blank, plus a bonus for
+  time left and for your streak.
+- **Coverage:** a shuffled deck deals all 36 grid cells (4 sg. classes × 6 cases + 2 pl.
+  classes × 6 cases) once before any cell repeats. The deck lasts for the whole page visit,
+  so about three or four games cover the full grid.
+- **Feedback on a miss** shows the full phrase, the cell (e.g. *ins. sg. masc. animate*),
+  the governor, the noun's class tag and a gloss of the modifier.
+- **End screen:** your score, the cells you saw this game, and a list of misses.
+
+## Home screen
+
+- **Modifier toggles.** Each blank picks one of the enabled sets at random, then a word from
+  that set:
+
+  | Set | Words | Agreement |
+  |---|---|---|
+  | this / that | *ten, tamten* | full paradigm |
+  | my, our + your (informal) | *mój, twój, nasz, wasz* | full paradigm (virile *moi, twoi, nasi, wasi*) |
+  | your (formal) | *pana, pani, państwa* | invariable: genitive of *pan/pani/państwo* |
+  | his, her, their | *jego, jej, ich* | invariable: genitive of *on/ona/oni* |
+
+  With invariable possessives only the adjective shows the case (*pana starym* [horse]).
+  One sentence never mixes second-person registers (*pani* … *twoim*) or two different
+  formal addressees (*pana* … *pani*). Reflexive *swój* is left out, because choosing it
+  depends on whether the owner is the subject, which the frames don't record.
+
+- **Scorecard (cumulative).** It shows:
+  - totals: games played, forms right, grid cells seen, best score
+  - a case × agreement-class grid
+  - every noun form you've been asked for, grouped by noun and coloured by accuracy
+
+  Forms are tracked per noun + cell, so *konia* as gen. and *konia* as acc. are counted
+  separately. The scorecard is saved in `localStorage`, and answers count as soon as you
+  give them, including in a game you quit. **Reset** clears it. Without storage (e.g. in a
+  private window), it lasts until you reload the page.
+
+## Content
+
+- **39 nouns** across the five Polish classes (*męskoosobowy, męskozwierzęcy, męskorzeczowy,
+  żeński, nijaki*): the original seed set plus nouns from the Duolingo export. Some are
+  there because they're traps: *man* (*mężczyzna*, an *-a* noun that is masc. personal),
+  *child* (*dziecko*: neuter sg., non-virile pl. *te małe dzieci*), *mouse* (*mysz*,
+  feminine), *school* (*szkoła*, feminine). *tomato* is left out on purpose: *pomidor* often
+  takes animate acc. in speech (*jem pomidora*), so it has no single right answer. Mass
+  nouns (*coffee, water, food*…) appear only in the singular.
+- **62 adjectives,** each tagged with the kinds of noun it can describe (person, animal,
+  thing, food, drink, place) so only plausible pairs are generated: no *smaczny* horse.
+- **38 frame sentences,** each slot tagged with its case, its Polish governor and the kinds
+  of noun it allows.
 
 ## Layout
 
 | File | Contents |
 |---|---|
-| `src/declension.js` | Case × agreement-class grid, determiner tables, adjective endings, stem-type rules, virile nom. pl. alternations |
-| `src/data.js` | Nouns (English, class tag, semantic tags, **hand-written sg./pl. paradigms**) and adjectives (lemma + stem type) |
-| `src/engine.js` | Frame sentences (each slot has its case, Polish governor and allowed semantic classes), round builder, noun-form distractors, coverage deck |
-| `src/scorecard.js` | Cumulative per-form tallies (noun + grid cell), aggregation for the home screen |
-| `src/ui.js` | Home screen, timed drilling loop, end-of-game grid, storage |
+| `index.html`, `style.css` | Screens (home, play, end), load-error banner, light/dark theme |
+| `src/declension.js` | Case × agreement-class grid; determiner and possessive tables; adjective endings, stem types and virile nom. pl. alternations; noun lookup |
+| `src/data.js` | Nouns (English, class tag, semantic tags, hand-written sg./pl. paradigms); adjectives (lemma, stem type, semantic tags) |
+| `src/engine.js` | Frames, round builder, noun-form distractors, register-clash rule, coverage deck |
+| `src/scorecard.js` | Per-form tallies and their aggregation for the home screen |
+| `src/ui.js` | Game loop, timer, home/end screens, storage |
+| `test/*.test.js` | Paradigms, agreement, coverage, generated rounds, scorecard |
 
-## Modifiers
+## Linguistic design notes
 
-The start screen toggles four sets. Each blank picks a set at random and then a word from
-that set, so the two demonstratives aren't swamped by ten possessives:
-
-| Set | Words | Agreement |
-|---|---|---|
-| this / that | *ten, tamten* | full paradigm |
-| my, our + your (informal) | *mój, twój, nasz, wasz* | full paradigm (virile *moi, twoi, nasi, wasi*) |
-| your (formal) | *pana, pani, państwa* | invariable: the genitive of *pan/pani/państwo* |
-| his, her, their | *jego, jej, ich* | invariable: the genitive of *on/ona/oni* |
-
-With the invariable possessives, only the adjective shows the case (*pana starym* [horse]).
-Those blanks are harder, and that's intended. One sentence never mixes second-person
-registers (*pani* … *twoim*) or two different formal addressees (*pana* … *pani*).
-Reflexive *swój* is not included. It depends on whether the owner is the subject, which the
-frames don't encode, and the learner never has to choose the possessive anyway.
-
-## Design notes: where this departs from the original brief
-
-- **Nouns are the drilled item now, so they have hand-written paradigms.** The original brief
-  kept the data model small because determiners and adjectives are fully rule-governed.
-  Nouns aren't: gen. sg. *-a/-u* (*komputera* but *stołu*), stem alternations (*stół →
-  stole*, *pies → psa*) and suppletion (*brat → bracia*) are lexical. Modifiers are still
-  generated. Every paradigm is tested for its class's syncretisms: acc. = gen. or nom.,
-  virile acc. pl. = gen. pl., and uniform *-om/-ami/-ach*. The *-a* masculine personal
-  *mężczyzna* is exempt from the acc. = gen. check: it declines like a feminine
-  (*mężczyznę*) but takes masc. animate agreement (*tego mężczyznę*).
-- **Distractors are other forms of the same noun,** preferring the same number and a
-  different case. Syncretic forms collapse, so a wrong option is never secretly right.
-  *pokój* has two standard gen. pl. forms (*pokoi*, *pokojów*); only *pokoi* is used.
-
-- **Velar stems differ from hard stems in more than two cells.** *k*/*g* can't be followed by
-  *y*/*e* in the spelling, so every ending that starts with *e* or *y* changes: *wysokiego,
-  wysokiemu, wysokim, wysokich, wysokie*. They don't just differ in the nom. masc. sg. and
-  the virile pl. If you take "gen./dat./ins./loc. unaffected" literally, you get *\*wysokego*.
-- **There are three stem types, not two.** *tani* and *poprzedni* are soft stems: *tania,
-  tanią, taniego*. They differ from velar stems in the fem. forms (*wysoka* but *tania*).
-- **A stem-type flag can't produce the virile nom. pl.** It needs consonant alternations:
-  *dobry → dobrzy, duży → duzi, czysty → czyści, suchy → susi, młody → młodzi, drogi →
-  drodzy*. `declension.js` has these as ordered rules, plus a per-lemma override for
-  lexical exceptions (*wesoły → weseli*, which also changes o to e).
-- **Case needs a governor.** English has no case, so "look at X" could be *patrzeć na* + acc.
-  or *przyglądać się* + dat. Each slot shows its Polish governor. Working out the case from
-  the governor is part of the drill.
-- **Adjectives have semantic restrictions.** Pairs like *tego plastikowego* man or *smaczny*
-  horse are grammatical noise. Adjectives and nouns carry coarse semantic tags (person,
-  animal, thing, food, drink, place) so that only plausible pairs are generated.
-- **The noun list is larger than the seed set.** With the original 14 nouns, every masc.
-  inanimate cell would have been *table*. I added nouns from the Duolingo export. Some of
-  them are there because they're traps: *child* (*dziecko*, neuter sg., non-virile pl.
-  *te małe dzieci*), *mouse* (*mysz*, feminine) and *man* (*mężczyzna*, an *-a* noun that is
-  masc. personal). *tomato* is left out on purpose, because *pomidor* often takes animate
-  acc. in speech (*jem pomidora*).
-- **Accusative fem. of *ten* is *tę*.** The colloquial *tą* is not accepted. *tą* can appear
-  as a distractor (it is the instrumental form).
+- **Modifiers are generated; nouns are looked up.** Determiners and adjectives are fully
+  rule-governed. Noun endings are lexical: gen. sg. *-a/-u* (*komputera* but *stołu*), stem
+  alternations (*stół → stole*, *pies → psa*), suppletion (*brat → bracia*). So each noun
+  has a hand-written paradigm, tested against its class's syncretisms (acc. = gen. or nom.,
+  virile acc. pl. = gen. pl., uniform *-om/-ami/-ach*). *mężczyzna* is exempt from the
+  acc. = gen. check: it declines like a feminine (*mężczyznę*) but takes masc. animate
+  agreement (*tego mężczyznę*).
+- **Three adjective stem types.** Hard (*dobry*), velar (*wysoki*) and soft (*tani*). Velar
+  stems insert *i* before every *e*/*y* ending (*wysokiego, wysokim, wysokie*), not only in
+  the nom. Soft stems also do it before *a*/*ą* (*tania* vs. *wysoka*).
+- **The virile nom. pl. comes from consonant alternations** (*dobrzy, duzi, czyści, susi,
+  młodzi, drodzy, niscy*), applied as ordered rules. Exceptions are overridden per word
+  (*wesoły → weseli*). There are deliberately no bare *z*/*zn* rules: they would match the
+  *cz* digraph (*\*smacźni*).
+- **Distractors are other forms of the same noun,** mostly same number, different case.
+  Forms that are spelled the same collapse into one option, so a wrong option is never
+  secretly right. *pokój* has two standard gen. pl. forms (*pokoi*, *pokojów*); only
+  *pokoi* is used.
+- **Governors are shown** because English has no case: "look at X" could be *patrzeć na* +
+  acc. or *przyglądać się* + dat.
+- **Accusative fem. of *ten* is the standard *tę*.** The colloquial *tą* is not used.
 
 ## Coverage guarantee
 
-`test/engine.test.js` checks that all 36 cells (4 sg. classes × 6 cases + 2 pl. classes × 6
-cases) can be reached, each through at least two different frames. It also builds 3,000
-random rounds and checks their options. In play, a shuffled deck deals every cell once
-before any cell repeats. The deck lasts for the whole page visit, not just one game, so
-about three or four 10-sentence games cover the full grid.
+The tests check that every one of the 36 cells can be reached through at least two frames,
+and with each modifier set alone. They also build 3,000 random rounds and check the options,
+paradigm lookups, semantic compatibility and register consistency.
