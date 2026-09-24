@@ -88,7 +88,37 @@ test('data: stem flags agree with lemma shape; noun tags are valid', () => {
   for (const a of Data.ADJECTIVES) assert.equal(a.stem, Dec.inferStemType(a.lemma), a.lemma);
   for (const n of Data.NOUNS) {
     assert.ok(Dec.NOUN_CLASSES.includes(n.cls), n.en);
-    assert.ok(n.mass || n.pl, n.en + ' needs a plural or mass: true');
+    assert.ok(n.mass ? !n.decl.pl && !n.pl : n.decl.pl && n.pl, n.en + ': mass XOR plural paradigm');
   }
   assert.equal(new Set(Data.ADJECTIVES.map((a) => a.lemma)).size, Data.ADJECTIVES.length, 'duplicate adjective');
+});
+
+test('noun paradigms are shaped consistently with their class', () => {
+  const [NOM, GEN, , ACC] = [0, 1, 2, 3];
+  for (const n of Data.NOUNS) {
+    const { sg, pl } = n.decl;
+    assert.equal(sg.length, 6, n.en);
+    if (pl) assert.equal(pl.length, 6, n.en);
+    // Enough distinct forms to fill three options.
+    assert.ok(new Set(sg).size >= 3, n.en + ' sg has < 3 distinct forms');
+    // Acc. sg.: animate masc. = gen.; inanimate masc. and neuter = nom. The animacy rule
+    // is about the consonant-final masc. declension: mężczyzna declines like an -a noun
+    // (acc. mężczyznę) while its modifiers still show masc. animate agreement (tego).
+    const aStem = sg[NOM].endsWith('a');
+    if (['męskoosobowy', 'męskozwierzęcy'].includes(n.cls) && !aStem) assert.equal(sg[ACC], sg[GEN], n.en);
+    if (['męskorzeczowy', 'nijaki'].includes(n.cls)) assert.equal(sg[ACC], sg[NOM], n.en);
+    if (!pl) continue;
+    // Acc. pl.: virile = gen.; everything else = nom.
+    assert.equal(pl[ACC], n.cls === 'męskoosobowy' ? pl[GEN] : pl[NOM], n.en);
+    // Dat./ins./loc. pl. endings are uniform across classes.
+    assert.match(pl[2], /om$/, n.en);
+    assert.match(pl[4], /(ami|mi)$/, n.en);
+    assert.match(pl[5], /ach$/, n.en);
+  }
+});
+
+test('the example from the request', () => {
+  const horse = Data.NOUNS.find((x) => x.en === 'horse');
+  const c = cell('sg', 'm-anim', 'ins');
+  assert.equal(Dec.declinePair('tamten', adj('poprzedni'), c) + ' ' + Dec.declineNoun(horse, c), 'tamtym poprzednim koniem');
 });

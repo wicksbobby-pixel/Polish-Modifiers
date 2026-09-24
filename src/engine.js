@@ -1,6 +1,9 @@
 /*
  * Frame sentences + round generation.
  *
+ * Each blank shows a Polish modifier (declined determiner + adjective) and an English noun;
+ * the player picks the Polish noun's form. Modifier + governor + English number fix the cell.
+ *
  * English has no case, so an English frame alone does not determine the Polish case
  * ("look at" = patrzeć na + acc. but przyglądać się + dat.). Each slot therefore carries
  * its Polish governor (`gov`) — a preposition, a verb, or "subject" — which the UI can show.
@@ -115,24 +118,16 @@
   }
 
   /**
-   * Two wrong options for `answer`, preferring near misses: same case (wrong agreement)
-   * or same agreement class (wrong case). Options are whole det+adj pairs from a single
-   * cell each, so a distractor is never an incoherent mix like "tego nową".
-   * Any string different from `answer` is genuinely wrong: the correct pair is a function
-   * of the cell, and syncretic cells (tej nowej = gen/dat/loc f.) share the string.
+   * Two wrong options: other forms of the same noun. Near misses first (same number,
+   * different case); the other number only as a fallback, since the English noun gives the
+   * number away. Syncretic forms collapse into one string (kota = gen. = acc.), so any
+   * string different from `answer` is genuinely wrong for this cell.
    */
-  function distractors(det, adj, cell, answer, rng) {
-    const near = new Set();
-    const far = new Set();
-    for (const c of Dec.gridCells()) {
-      const form = Dec.declinePair(det, adj, c);
-      if (form === answer) continue;
-      const isNear = c.case === cell.case || (c.number === cell.number && c.agr === cell.agr);
-      (isNear ? near : far).add(form);
-    }
-    for (const f of near) far.delete(f);
-    const pool = shuffle([...near], rng).concat(shuffle([...far], rng));
-    return pool.slice(0, 2);
+  function distractors(noun, cell, answer, rng) {
+    const other = cell.number === 'sg' ? 'pl' : 'sg';
+    const near = new Set(noun.decl[cell.number].filter((f) => f !== answer));
+    const far = new Set((noun.decl[other] || []).filter((f) => f !== answer && !near.has(f)));
+    return shuffle([...near], rng).concat(shuffle([...far], rng)).slice(0, 2);
   }
 
   function makeBlank(slot, noun, number, rng) {
@@ -140,12 +135,12 @@
     const cell = { number, agr, case: slot.case, key: Dec.cellKey(number, agr, slot.case) };
     const det = pick(DET_LEMMAS, rng);
     const adj = pick(adjectivesFor(noun), rng);
-    const answer = Dec.declinePair(det, adj, cell);
-    const options = shuffle([answer, ...distractors(det, adj, cell, answer, rng)], rng);
+    const answer = Dec.declineNoun(noun, cell);
     return {
-      cell, noun, det, adj, gov: slot.gov, answer, options,
+      cell, noun, det, adj, gov: slot.gov, answer,
+      modifier: Dec.declinePair(det, adj, cell),
+      options: shuffle([answer, ...distractors(noun, cell, answer, rng)], rng),
       nounText: number === 'sg' ? noun.en : noun.pl,
-      gloss: Dec.DETERMINERS[det].gloss + ' ' + adj.en,
     };
   }
 

@@ -1,4 +1,4 @@
-/* Drilling loop: timed 3-option choice per blank, timer shrinking as rounds progress. */
+/* Drilling loop: timed 3-option choice of noun form per blank, timer shrinking as rounds progress. */
 (function () {
   'use strict';
 
@@ -62,15 +62,14 @@
         return;
       }
       const b = blanks[part.index];
+      const mod = el('span', 'modifier', b.modifier);
+      if (i === 0) mod.classList.add('initial'); // sentence-initial: capitalised via CSS
       const wrap = el('span', 'slot');
       wrap.dataset.index = part.index;
-      const fill = el('span', 'fill', '＿＿＿');
-      const noun = el('span', 'noun', ' ' + b.nounText);
       const gov = el('span', 'gov', b.gov);
       gov.hidden = !showGov;
-      wrap.append(fill, gov);
-      p.append(wrap, noun);
-      if (i === 0) wrap.classList.add('initial'); // sentence-initial: capitalised via CSS
+      wrap.append(el('span', 'fill', '＿＿＿'), el('span', 'en', b.nounText), gov);
+      p.append(mod, ' ', wrap);
     });
   }
 
@@ -120,7 +119,7 @@
     const correct = chosen === b.answer;
     const remaining = Math.max(0, S.deadline - performance.now());
 
-    S.results.push({ cell: b.cell, correct, answer: b.answer, chosen, noun: b.nounText, gov: b.gov });
+    S.results.push({ cell: b.cell, correct, answer: b.answer, chosen, modifier: b.modifier, gov: b.gov });
     if (correct) {
       S.streak++;
       S.score += 100 + Math.round(remaining / 50) + Math.min(S.streak, 10) * 10;
@@ -151,8 +150,8 @@
     } else {
       fb.replaceChildren(
         chosen == null ? '⏱ Time — ' : '✗ ',
-        el('b', null, b.answer),
-        ' · ' + label + ' · ' + b.gov + ' ' + b.adj.lemma + ' (' + b.gloss + ')',
+        b.modifier + ' ', el('b', null, b.answer),
+        ' · ' + label + ' · ' + b.gov + ' · ' + b.noun.pol + ' (' + b.noun.cls + ')',
         el('span', 'hint', '  Space to continue'));
       fb.classList.add('bad');
       S.phase = 'wait';
@@ -219,7 +218,7 @@
     const ul = el('ul', 'misses');
     for (const m of misses) {
       const li = el('li');
-      li.append(el('b', null, m.answer), ' ' + m.noun + ' — ' + Dec.cellLabel(m.cell) + ', ' + m.gov
+      li.append(m.modifier + ' ', el('b', null, m.answer), ' — ' + Dec.cellLabel(m.cell) + ', ' + m.gov
         + (m.chosen ? ' (you: ' + m.chosen + ')' : ' (timed out)'));
       ul.append(li);
     }

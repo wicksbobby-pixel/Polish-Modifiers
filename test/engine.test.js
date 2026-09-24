@@ -41,7 +41,8 @@ test('buildRound realises the requested cell and produces valid options', () => 
       assert.equal(b.options.length, 3);
       assert.equal(new Set(b.options).size, 3, 'duplicate options: ' + b.options);
       assert.equal(b.options.filter((o) => o === b.answer).length, 1);
-      assert.equal(b.answer, Dec.declinePair(b.det, b.adj, b.cell));
+      assert.equal(b.answer, Dec.declineNoun(b.noun, b.cell));
+      assert.equal(b.modifier, Dec.declinePair(b.det, b.adj, b.cell));
       assert.ok(b.adj.sem.some((s) => b.noun.sem.includes(s)), b.adj.lemma + ' + ' + b.noun.en);
       if (b.cell.number === 'pl') assert.ok(!b.noun.mass, 'mass noun in plural: ' + b.noun.en);
     }

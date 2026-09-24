@@ -1,11 +1,14 @@
 # Modifier Rush
 
-A timed drill for Polish determiner + adjective agreement. Each sentence is an English frame
-with bare English nouns. Each blank holds a determiner (*ten* or *tamten*) plus an adjective,
-and you pick the form declined correctly for the noun's gender, number and animacy and for
-the case its governor assigns:
+A timed drill for Polish noun declension. Each sentence is an English frame. At each blank
+you see a declined Polish determiner + adjective, with the English noun and its Polish
+governor underneath. You pick the Polish noun in the right form from three options, all
+forms of the same noun:
 
-> **Ten stary** man is walking to **tej nowej** school.
+> I'm interested in tamtym poprzednim **[horse]** → koń / konia / **koniem**
+
+The modifier and the governor give you the case (the governor settles the syncretic
+modifiers: *tej nowej* is gen., dat. or loc.). The English noun gives you the number.
 
 ## Run
 
@@ -21,11 +24,23 @@ Tests: `npm test` (Node ≥ 18, no dependencies).
 | File | Contents |
 |---|---|
 | `src/declension.js` | Case × agreement-class grid, determiner tables, adjective endings, stem-type rules, virile nom. pl. alternations |
-| `src/data.js` | Nouns (English + Polish class tag + semantic tags) and adjectives (lemma + stem type) |
-| `src/engine.js` | Frame sentences (each slot has its case, Polish governor and allowed semantic classes), round builder, distractors, coverage deck |
+| `src/data.js` | Nouns (English, class tag, semantic tags, **hand-written sg./pl. paradigms**) and adjectives (lemma + stem type) |
+| `src/engine.js` | Frame sentences (each slot has its case, Polish governor and allowed semantic classes), round builder, noun-form distractors, coverage deck |
 | `src/ui.js` | The timed drilling loop and the end-of-session grid |
 
 ## Design notes: where this departs from the original brief
+
+- **Nouns are the drilled item now, so they have hand-written paradigms.** The original brief
+  kept the data model small because determiners and adjectives are fully rule-governed.
+  Nouns aren't: gen. sg. *-a/-u* (*komputera* but *stołu*), stem alternations (*stół →
+  stole*, *pies → psa*) and suppletion (*brat → bracia*) are lexical. Modifiers are still
+  generated. Every paradigm is tested for its class's syncretisms: acc. = gen. or nom.,
+  virile acc. pl. = gen. pl., and uniform *-om/-ami/-ach*. The *-a* masculine personal
+  *mężczyzna* is exempt from the acc. = gen. check: it declines like a feminine
+  (*mężczyznę*) but takes masc. animate agreement (*tego mężczyznę*).
+- **Distractors are other forms of the same noun,** preferring the same number and a
+  different case. Syncretic forms collapse, so a wrong option is never secretly right.
+  *pokój* has two standard gen. pl. forms (*pokoi*, *pokojów*); only *pokoi* is used.
 
 - **Velar stems differ from hard stems in more than two cells.** *k*/*g* can't be followed by
   *y*/*e* in the spelling, so every ending that starts with *e* or *y* changes: *wysokiego,

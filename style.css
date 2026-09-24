@@ -66,15 +66,16 @@ button.primary kbd { color: #fff; border-color: rgba(255,255,255,.5); }
 .sentence { font-size: 1.45rem; line-height: 2.8; margin: 0 0 24px; }
 .slot { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1.6; margin-top: 0.35em; }
 .fill {
-  display: inline-block; min-width: 5.5em; padding: 0 8px; text-align: center;
+  display: inline-block; min-width: 4.5em; padding: 0 8px; text-align: center;
   background: var(--blank); border-radius: 6px; border-bottom: 2px solid transparent;
 }
-.slot.initial .fill::first-letter { text-transform: uppercase; }
+.modifier.initial { display: inline-block; }
+.modifier.initial::first-letter { text-transform: uppercase; }
+.en { font-size: 0.8rem; color: var(--text); line-height: 1.3; }
 .slot.active .fill { border-bottom-color: var(--accent); }
 .slot.right .fill { color: var(--ok); }
 .slot.wrong .fill { color: var(--bad); }
 .gov { font-size: 0.72rem; color: var(--muted); font-style: italic; line-height: 1.2; }
-.noun { margin-right: 0.1em; }
 
 .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 @media (max-width: 520px) { .options { grid-template-columns: 1fr; } }
