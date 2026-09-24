@@ -15,7 +15,13 @@ modifiers: *tej nowej* is gen., dat. or loc.). The English noun gives you the nu
 Open `index.html` in a browser. It needs no build or server (it uses classic scripts, so it
 works from `file://`).
 
-Keys: `1` `2` `3` answer · `Space` continue after a miss · `G` show/hide governor hints · `Enter` start.
+A game is 10 sentences. Keys: `1` `2` `3` answer · `Space` continue after a miss · `G` show/hide
+governor hints · `Enter` start / play again · `Esc` back to the home screen.
+
+The home screen has a cumulative scorecard: a case × agreement-class grid and every noun
+form you've been asked for, grouped by noun and colour-coded by accuracy. It's saved in
+`localStorage`; a game you quit partway still counts. If storage isn't available (e.g. a
+private window), the scorecard lasts until you reload the page.
 
 Tests: `npm test` (Node ≥ 18, no dependencies).
 
@@ -26,7 +32,8 @@ Tests: `npm test` (Node ≥ 18, no dependencies).
 | `src/declension.js` | Case × agreement-class grid, determiner tables, adjective endings, stem-type rules, virile nom. pl. alternations |
 | `src/data.js` | Nouns (English, class tag, semantic tags, **hand-written sg./pl. paradigms**) and adjectives (lemma + stem type) |
 | `src/engine.js` | Frame sentences (each slot has its case, Polish governor and allowed semantic classes), round builder, noun-form distractors, coverage deck |
-| `src/ui.js` | The timed drilling loop and the end-of-session grid |
+| `src/scorecard.js` | Cumulative per-form tallies (noun + grid cell), aggregation for the home screen |
+| `src/ui.js` | Home screen, timed drilling loop, end-of-game grid, storage |
 
 ## Modifiers
 
@@ -90,4 +97,5 @@ frames don't encode, and the learner never has to choose the possessive anyway.
 `test/engine.test.js` checks that all 36 cells (4 sg. classes × 6 cases + 2 pl. classes × 6
 cases) can be reached, each through at least two different frames. It also builds 3,000
 random rounds and checks their options. In play, a shuffled deck deals every cell once
-before any cell repeats, so a 36-round session covers the full grid.
+before any cell repeats. The deck lasts for the whole page visit, not just one game, so
+about three or four 10-sentence games cover the full grid.

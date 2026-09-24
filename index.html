@@ -11,7 +11,8 @@
     <header>
       <h1>Modifier Rush</h1>
       <div id="hud" hidden>
-        <span>Round <b id="hud-round">1</b>/<b id="hud-total">20</b></span>
+        <button id="quit" class="link" title="Back to home (Esc)">⌂ Home</button>
+        <span>Round <b id="hud-round">1</b>/<b id="hud-total">10</b></span>
         <span>Score <b id="hud-score">0</b></span>
         <span>Streak <b id="hud-streak">0</b></span>
       </div>
@@ -22,20 +23,27 @@
         English noun under it. Pick the Polish noun in the right form. The modifier and the
         governor (the preposition or verb under the blank) give you the case; the English
         noun gives you the number.</p>
-      <label class="rounds">Rounds
-        <select id="rounds">
-          <option value="12">12</option>
-          <option value="24" selected>24</option>
-          <option value="36">36 (full grid)</option>
-          <option value="72">72</option>
-        </select>
-      </label>
       <fieldset class="sets">
         <legend>Modifiers</legend>
         <div id="sets"></div>
       </fieldset>
       <button id="start" class="primary">Start <kbd>Enter</kbd></button>
-      <p class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> answer · <kbd>Space</kbd> continue · <kbd>G</kbd> toggle governor hints</p>
+      <p class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> answer · <kbd>Space</kbd> continue · <kbd>G</kbd> toggle governor hints · <kbd>Esc</kbd> home</p>
+    </section>
+
+    <section id="scorecard" class="screen">
+      <div class="card-head">
+        <h2>Scorecard</h2>
+        <button id="reset" class="link">Reset</button>
+      </div>
+      <p id="card-totals" class="card-totals"></p>
+      <div id="card-body">
+        <h3>By case and agreement class</h3>
+        <table id="card-grid" class="grid"></table>
+        <h3>Encountered forms</h3>
+        <p class="legend"><span class="chip all">all right</span><span class="chip some">mixed</span><span class="chip none">all wrong</span> · hover a form for its cell and tally</p>
+        <div id="card-forms"></div>
+      </div>
     </section>
 
     <section id="screen-play" class="screen" hidden>
@@ -51,13 +59,17 @@
       <h3>This session’s grid</h3>
       <table id="end-grid" class="grid"></table>
       <div id="end-misses"></div>
-      <button id="again" class="primary">Again <kbd>Enter</kbd></button>
+      <div class="end-actions">
+        <button id="again" class="primary">Again <kbd>Enter</kbd></button>
+        <button id="home" class="secondary">Home <kbd>Esc</kbd></button>
+      </div>
     </section>
   </main>
 
   <script src="src/declension.js"></script>
   <script src="src/data.js"></script>
   <script src="src/engine.js"></script>
+  <script src="src/scorecard.js"></script>
   <script src="src/ui.js"></script>
 </body>
 </html>
