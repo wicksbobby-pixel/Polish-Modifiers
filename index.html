@@ -4,9 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modifier Rush</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
+  <!-- If any script fails to load or crashes during setup, say so instead of leaving a dead
+       Start button. Bump ?v= on the tags below whenever the files change (cache busting). -->
+  <div id="load-error" class="load-error" hidden></div>
+  <script>
+    (function () {
+      function report(msg) {
+        var box = document.getElementById('load-error');
+        box.hidden = false;
+        box.textContent = 'Modifier Rush failed to start: ' + msg
+          + '. Try a hard reload (Ctrl/Cmd+Shift+R) and make sure every file in src/ is present and up to date.';
+      }
+      window.addEventListener('error', function (e) {
+        if (e.target && e.target.tagName === 'SCRIPT') report('could not load ' + e.target.getAttribute('src'));
+        // Browsers mask details of file:// script errors as "Script error."
+        else report(/^Script error\.?$/.test(e.message) ? 'a script crashed (details in the browser console)' : e.message.replace(/\.$/, ''));
+      }, true);
+      window.addEventListener('load', function () {
+        var mr = window.MR || {};
+        var missing = ['declension', 'data', 'engine', 'scorecard'].filter(function (m) { return !mr[m]; });
+        if (missing.length) report('missing module(s): ' + missing.join(', '));
+      });
+    })();
+  </script>
   <main id="app">
     <header>
       <h1>Modifier Rush</h1>
@@ -66,10 +89,10 @@
     </section>
   </main>
 
-  <script src="src/declension.js"></script>
-  <script src="src/data.js"></script>
-  <script src="src/engine.js"></script>
-  <script src="src/scorecard.js"></script>
-  <script src="src/ui.js"></script>
+  <script src="src/declension.js?v=5"></script>
+  <script src="src/data.js?v=5"></script>
+  <script src="src/engine.js?v=5"></script>
+  <script src="src/scorecard.js?v=5"></script>
+  <script src="src/ui.js?v=5"></script>
 </body>
 </html>

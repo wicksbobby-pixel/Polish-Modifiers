@@ -131,3 +131,8 @@ button.secondary { background: none; color: var(--text); border: 1px solid var(-
 .legend { color: var(--muted); font-size: 0.85rem; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; }
 #hud .link { font-size: 0.9rem; }
 @media (max-width: 520px) { #card-grid { display: block; overflow-x: auto; } }
+
+.load-error {
+  max-width: 760px; margin: 16px auto 0; padding: 12px 16px; border-radius: 8px;
+  background: color-mix(in srgb, var(--bad) 15%, var(--panel)); color: var(--bad); border: 1px solid var(--bad);
+}
