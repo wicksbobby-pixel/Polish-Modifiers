@@ -122,3 +122,31 @@ test('the example from the request', () => {
   const c = cell('sg', 'm-anim', 'ins');
   assert.equal(Dec.declinePair('tamten', adj('poprzedni'), c) + ' ' + Dec.declineNoun(horse, c), 'tamtym poprzednim koniem');
 });
+
+test('possessives: declinable ones agree, attested virile forms match', () => {
+  const acc = (l) => paradigm((c) => Dec.declineDeterminer(l, c)).acc;
+  assert.deepEqual(acc('mój'), ['mojego', 'mój', 'moją', 'moje', 'moich', 'moje']);
+  assert.deepEqual(acc('twój'), ['twojego', 'twój', 'twoją', 'twoje', 'twoich', 'twoje']);
+  assert.deepEqual(acc('wasz'), ['waszego', 'wasz', 'waszą', 'wasze', 'waszych', 'wasze']);
+  // nom. row, attested in the Duolingo export: mój twój nasz wasz / moja twoja nasza wasza /
+  // moje twoje nasze wasze / moi twoi nasi wasi
+  for (const [l, row] of Object.entries({
+    mój: ['mój', 'mój', 'moja', 'moje', 'moi', 'moje'],
+    twój: ['twój', 'twój', 'twoja', 'twoje', 'twoi', 'twoje'],
+    nasz: ['nasz', 'nasz', 'nasza', 'nasze', 'nasi', 'nasze'],
+    wasz: ['wasz', 'wasz', 'wasza', 'wasze', 'wasi', 'wasze'],
+  })) assert.deepEqual(paradigm((c) => Dec.declineDeterminer(l, c)).nom, row, l);
+});
+
+test('possessives: jego/jej/ich and formal pana/pani/państwa are invariable', () => {
+  for (const l of ['jego', 'jej', 'ich', 'pana', 'pani', 'państwa']) {
+    const forms = new Set(Dec.gridCells().map((c) => Dec.declineDeterminer(l, c)));
+    assert.deepEqual([...forms], [l]);
+  }
+  const c = cell('sg', 'm-anim', 'ins');
+  assert.equal(Dec.declinePair('pana', adj('stary'), c), 'pana starym');
+});
+
+test('every determiner belongs to a known set', () => {
+  for (const [l, d] of Object.entries(Dec.DETERMINERS)) assert.ok(d.set in Dec.DETERMINER_SETS, l);
+});

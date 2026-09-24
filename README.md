@@ -28,6 +28,24 @@ Tests: `npm test` (Node ≥ 18, no dependencies).
 | `src/engine.js` | Frame sentences (each slot has its case, Polish governor and allowed semantic classes), round builder, noun-form distractors, coverage deck |
 | `src/ui.js` | The timed drilling loop and the end-of-session grid |
 
+## Modifiers
+
+The start screen toggles four sets. Each blank picks a set at random and then a word from
+that set, so the two demonstratives aren't swamped by ten possessives:
+
+| Set | Words | Agreement |
+|---|---|---|
+| this / that | *ten, tamten* | full paradigm |
+| my, our + your (informal) | *mój, twój, nasz, wasz* | full paradigm (virile *moi, twoi, nasi, wasi*) |
+| your (formal) | *pana, pani, państwa* | invariable: the genitive of *pan/pani/państwo* |
+| his, her, their | *jego, jej, ich* | invariable: the genitive of *on/ona/oni* |
+
+With the invariable possessives, only the adjective shows the case (*pana starym* [horse]).
+Those blanks are harder, and that's intended. One sentence never mixes second-person
+registers (*pani* … *twoim*) or two different formal addressees (*pana* … *pani*).
+Reflexive *swój* is not included. It depends on whether the owner is the subject, which the
+frames don't encode, and the learner never has to choose the possessive anyway.
+
 ## Design notes: where this departs from the original brief
 
 - **Nouns are the drilled item now, so they have hand-written paradigms.** The original brief

@@ -45,6 +45,10 @@ h1::before { content: ""; display: inline-block; width: 10px; height: 10px; back
 .lede { margin-top: 0; }
 .rounds { display: block; margin: 16px 0; color: var(--muted); }
 .rounds select { margin-left: 8px; font: inherit; }
+.sets { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 18px; padding: 8px 14px 10px; }
+.sets legend { color: var(--muted); padding: 0 4px; }
+.sets label { display: block; margin: 2px 0; }
+#sets.invalid label { color: var(--bad); }
 .keys { color: var(--muted); font-size: 0.85rem; }
 
 kbd {

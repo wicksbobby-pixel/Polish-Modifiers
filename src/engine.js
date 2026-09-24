@@ -78,7 +78,30 @@
     { text: "I'm dreaming about {0}.", slots: [s('loc', 'marzyć o', ALL)] },
   ];
 
-  const DET_LEMMAS = Object.keys(Dec.DETERMINERS);
+  const ALL_SETS = Object.keys(Dec.DETERMINER_SETS);
+
+  // Second-person possessives fix the register of address. One sentence must not address
+  // the listener both as ty/wy (twój, wasz) and as pan/pani/państwo, nor as two different
+  // formal addressees.
+  const INFORMAL_2P = ['twój', 'wasz'];
+  const FORMAL_2P = ['pana', 'pani', 'państwa'];
+  function registerClash(a, b) {
+    const formal = (l) => FORMAL_2P.includes(l);
+    const informal = (l) => INFORMAL_2P.includes(l);
+    return (formal(a) && informal(b)) || (informal(a) && formal(b)) || (formal(a) && formal(b) && a !== b);
+  }
+
+  /**
+   * Pick a set uniformly, then a lemma within it, so the 2 demonstratives aren't swamped by
+   * 10 possessives. `used` are determiners already in the sentence.
+   */
+  function pickDeterminer(sets, rng, used = []) {
+    const ok = (l) => !used.some((u) => registerClash(u, l));
+    const bySet = sets
+      .map((set) => Object.keys(Dec.DETERMINERS).filter((l) => Dec.DETERMINERS[l].set === set && ok(l)))
+      .filter((ls) => ls.length);
+    return pick(pick(bySet, rng), rng);
+  }
 
   const overlaps = (a, b) => a.some((x) => b.includes(x));
   const pick = (arr, rng) => arr[Math.floor(rng() * arr.length)];
@@ -130,10 +153,11 @@
     return shuffle([...near], rng).concat(shuffle([...far], rng)).slice(0, 2);
   }
 
-  function makeBlank(slot, noun, number, rng) {
+  function makeBlank(slot, noun, number, rng, sets, used) {
     const agr = Dec.agreementClass(noun.cls, number);
     const cell = { number, agr, case: slot.case, key: Dec.cellKey(number, agr, slot.case) };
-    const det = pick(DET_LEMMAS, rng);
+    const det = pickDeterminer(sets, rng, used);
+    used.push(det);
     const adj = pick(adjectivesFor(noun), rng);
     const answer = Dec.declineNoun(noun, cell);
     return {
@@ -145,7 +169,9 @@
   }
 
   /** Build a round whose target blank realises `cell`. Other slots are filled freely. */
-  function buildRound(cell, rng = Math.random) {
+  /** sets: which DETERMINER_SETS to draw modifiers from (default: all). */
+  function buildRound(cell, rng = Math.random, sets = ALL_SETS) {
+    if (!sets.length) throw new Error('No determiner sets selected');
     const placements = placementsFor(cell);
     if (!placements.length) throw new Error('Unreachable cell: ' + cell.key);
     const pl = pick(placements, rng);
@@ -158,9 +184,10 @@
       if (!free(number).length) number = 'sg';
       return { noun: pick(free(number), rng), number, slot };
     });
+    const used = [];
     return {
       frame,
-      blanks: blanks.map((b) => makeBlank(b.slot, b.noun, b.number, rng)),
+      blanks: blanks.map((b) => makeBlank(b.slot, b.noun, b.number, rng, sets, used)),
       parts: renderParts(frame.text, blanks.map((b) => b.number)),
       targetSlot: pl.slotIndex,
     };
@@ -196,7 +223,7 @@
     };
   }
 
-  const api = { FRAMES, nounsFor, adjectivesFor, placementsFor, distractors, buildRound, renderParts, createDeck, shuffle };
+  const api = { registerClash, FRAMES, nounsFor, adjectivesFor, placementsFor, distractors, buildRound, renderParts, createDeck, shuffle };
 
   if (typeof module === 'object' && module.exports) module.exports = api;
   else (root.MR = root.MR || {}).engine = api;

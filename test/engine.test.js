@@ -46,7 +46,10 @@ test('buildRound realises the requested cell and produces valid options', () => 
       assert.ok(b.adj.sem.some((s) => b.noun.sem.includes(s)), b.adj.lemma + ' + ' + b.noun.en);
       if (b.cell.number === 'pl') assert.ok(!b.noun.mass, 'mass noun in plural: ' + b.noun.en);
     }
-    if (round.blanks.length === 2) assert.notEqual(round.blanks[0].noun, round.blanks[1].noun);
+    if (round.blanks.length === 2) {
+      assert.notEqual(round.blanks[0].noun, round.blanks[1].noun);
+      assert.ok(!Eng.registerClash(round.blanks[0].det, round.blanks[1].det), round.blanks.map((b) => b.det).join(' + '));
+    }
     assert.equal(round.parts.filter((p) => p.type === 'blank').length, round.blanks.length);
   }
 });
@@ -68,4 +71,30 @@ test('frame agreement tokens resolve by slot number', () => {
     { type: 'blank', index: 1 },
     { type: 'text', value: '.' },
   ]);
+});
+
+test('determiner sets restrict modifiers, and each set alone covers the grid', () => {
+  const r = rng(3);
+  for (const set of Object.keys(Dec.DETERMINER_SETS)) {
+    for (const cell of Dec.gridCells()) {
+      const round = Eng.buildRound(cell, r, [set]);
+      for (const b of round.blanks) assert.equal(Dec.DETERMINERS[b.det].set, set);
+    }
+  }
+  assert.throws(() => Eng.buildRound(Dec.gridCells()[0], r, []));
+});
+
+test('register clash: one second-person register per sentence', () => {
+  assert.ok(Eng.registerClash('pani', 'twój'));
+  assert.ok(Eng.registerClash('wasz', 'państwa'));
+  assert.ok(Eng.registerClash('pana', 'pani'));
+  assert.ok(!Eng.registerClash('pani', 'pani'));
+  assert.ok(!Eng.registerClash('twój', 'wasz'));
+  assert.ok(!Eng.registerClash('pana', 'mój'));
+  // With only formal + informal enabled, a clash must still be avoidable.
+  const r = rng(11);
+  for (let i = 0; i < 2000; i++) {
+    const round = Eng.buildRound(Dec.gridCells()[i % 36], r, ['formal', 'informal']);
+    if (round.blanks.length === 2) assert.ok(!Eng.registerClash(round.blanks[0].det, round.blanks[1].det));
+  }
 });

@@ -29,8 +29,27 @@
     $('hud').hidden = screen !== 'screen-play';
   }
 
+  // Start-screen checkboxes, one per determiner set.
+  for (const [set, label] of Object.entries(Dec.DETERMINER_SETS)) {
+    const lab = el('label');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.value = set;
+    box.checked = true;
+    lab.append(box, ' ' + label);
+    $('sets').append(lab);
+  }
+  const chosenSets = () => [...$('sets').querySelectorAll('input:checked')].map((b) => b.value);
+
   function startSession() {
+    const sets = chosenSets();
+    if (!sets.length) {
+      $('sets').classList.add('invalid');
+      return;
+    }
+    $('sets').classList.remove('invalid');
     S = {
+      sets,
       total: +$('rounds').value,
       round: 0, score: 0, streak: 0,
       deck: Eng.createDeck(),
@@ -45,7 +64,7 @@
   function nextRound() {
     if (S.round >= S.total) return endSession();
     S.round++;
-    S.current = Eng.buildRound(S.deck.next());
+    S.current = Eng.buildRound(S.deck.next(), Math.random, S.sets);
     S.blank = 0;
     renderSentence();
     startBlank();
@@ -151,7 +170,8 @@
       fb.replaceChildren(
         chosen == null ? '⏱ Time — ' : '✗ ',
         b.modifier + ' ', el('b', null, b.answer),
-        ' · ' + label + ' · ' + b.gov + ' · ' + b.noun.pol + ' (' + b.noun.cls + ')',
+        ' · ' + label + ' · ' + b.gov + ' · ' + b.noun.pol + ' (' + b.noun.cls + ')'
+          + ' · ' + b.det + ' = ' + Dec.DETERMINERS[b.det].gloss,
         el('span', 'hint', '  Space to continue'));
       fb.classList.add('bad');
       S.phase = 'wait';
@@ -226,7 +246,7 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'SELECT' || (e.target.tagName === 'INPUT' && e.key !== 'Enter')) return;
     const k = e.key;
     if (k === 'g' || k === 'G') {
       showGov = !showGov;

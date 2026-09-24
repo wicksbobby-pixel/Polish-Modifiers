@@ -63,8 +63,8 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Determiners: stored in full rather than derived, since tamten is not simply
-  // "tam" + ten (acc. fem. is tę but tamtą).
+  // Determiners (demonstratives and possessives): stored as full tables rather than
+  // derived, since tamten is not simply "tam" + ten (acc. fem. is tę but tamtą).
   // Row order per case: [m-anim, m-inan, f, n, vir, nonvir]
   // ---------------------------------------------------------------------------
   function rows(table) {
@@ -76,8 +76,47 @@
     return out;
   }
 
+  // mój and nasz are written out; twój and wasz differ only in the initial consonant(s).
+  const MOJ = {
+    nom: ['mój', 'mój', 'moja', 'moje', 'moi', 'moje'],
+    gen: ['mojego', 'mojego', 'mojej', 'mojego', 'moich', 'moich'],
+    dat: ['mojemu', 'mojemu', 'mojej', 'mojemu', 'moim', 'moim'],
+    acc: ['mojego', 'mój', 'moją', 'moje', 'moich', 'moje'],
+    ins: ['moim', 'moim', 'moją', 'moim', 'moimi', 'moimi'],
+    loc: ['moim', 'moim', 'mojej', 'moim', 'moich', 'moich'],
+  };
+  const NASZ = {
+    nom: ['nasz', 'nasz', 'nasza', 'nasze', 'nasi', 'nasze'],
+    gen: ['naszego', 'naszego', 'naszej', 'naszego', 'naszych', 'naszych'],
+    dat: ['naszemu', 'naszemu', 'naszej', 'naszemu', 'naszym', 'naszym'],
+    acc: ['naszego', 'nasz', 'naszą', 'nasze', 'naszych', 'nasze'],
+    ins: ['naszym', 'naszym', 'naszą', 'naszym', 'naszymi', 'naszymi'],
+    loc: ['naszym', 'naszym', 'naszej', 'naszym', 'naszych', 'naszych'],
+  };
+  function reprefix(table, from, to) {
+    const out = {};
+    for (const c of CASES) out[c] = table[c].map((f) => to + f.slice(from.length));
+    return out;
+  }
+  // Genitive-derived possessives (jego, jej, ich; formal pana, pani, państwa) don't agree
+  // with the head noun at all: one form across the whole grid.
+  function invariable(form) {
+    const out = {};
+    for (const c of CASES) out[c] = Array(6).fill(form);
+    return out;
+  }
+
+  // set: which start-screen toggle a determiner belongs to.
+  const DETERMINER_SETS = {
+    demonstrative: 'this / that',
+    informal: 'my, our + your (informal: twój, wasz)',
+    formal: 'your (formal: pana, pani, państwa)',
+    third: 'his, her, their',
+  };
+
   const DETERMINERS = {
     ten: {
+      set: 'demonstrative',
       gloss: 'this',
       forms: rows({
         nom: ['ten', 'ten', 'ta', 'to', 'ci', 'te'],
@@ -90,6 +129,7 @@
       }),
     },
     tamten: {
+      set: 'demonstrative',
       gloss: 'that',
       forms: rows({
         nom: ['tamten', 'tamten', 'tamta', 'tamto', 'tamci', 'tamte'],
@@ -100,6 +140,17 @@
         loc: ['tamtym', 'tamtym', 'tamtej', 'tamtym', 'tamtych', 'tamtych'],
       }),
     },
+    mój: { set: 'informal', gloss: 'my', forms: rows(MOJ) },
+    twój: { set: 'informal', gloss: 'your (informal sg.)', forms: rows(reprefix(MOJ, 'm', 'tw')) },
+    nasz: { set: 'informal', gloss: 'our', forms: rows(NASZ) },
+    wasz: { set: 'informal', gloss: 'your (informal pl.)', forms: rows(reprefix(NASZ, 'n', 'w')) },
+    // Formal address: genitive of pan / pani / państwo ("of you, sir/madam/ladies and gentlemen")
+    pana: { set: 'formal', gloss: 'your (formal, to a man)', forms: rows(invariable('pana')) },
+    pani: { set: 'formal', gloss: 'your (formal, to a woman)', forms: rows(invariable('pani')) },
+    państwa: { set: 'formal', gloss: 'your (formal, to a group)', forms: rows(invariable('państwa')) },
+    jego: { set: 'third', gloss: 'his', forms: rows(invariable('jego')) },
+    jej: { set: 'third', gloss: 'her', forms: rows(invariable('jej')) },
+    ich: { set: 'third', gloss: 'their', forms: rows(invariable('ich')) },
   };
 
   function declineDeterminer(lemma, cell) {
@@ -199,7 +250,7 @@
 
   const api = {
     CASES, SG_CLASSES, PL_CLASSES, CASE_LABELS, CLASS_LABELS, NOUN_CLASSES, STEM_TYPES,
-    DETERMINERS,
+    DETERMINERS, DETERMINER_SETS,
     agreementClass, gridCells, cellKey, cellLabel,
     inferStemType, virileNominative,
     declineDeterminer, declineAdjective, declinePair, declineNoun,
