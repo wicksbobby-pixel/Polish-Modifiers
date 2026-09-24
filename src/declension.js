@@ -1,0 +1,200 @@
+/*
+ * Declension engine: determiners (ten, tamten) and adjectives.
+ *
+ * The whole agreement grid is 6 cases × 6 agreement classes:
+ *   singular: m-anim (masc. animate: personal + non-personal), m-inan (masc. inanimate), f, n
+ *   plural:   vir (virile / męskoosobowy), nonvir (non-virile: everything else)
+ * Masc. personal vs. masc. non-personal animate never diverge in the singular; they only
+ * split in the plural (virile vs. non-virile), which is why the singular has one m-anim class.
+ *
+ * Loaded as a classic <script> in the browser (window.MR.declension) and via require() in
+ * Node tests, so the page works when opened straight from disk (file:// forbids ES modules).
+ */
+(function (root) {
+  'use strict';
+
+  const CASES = ['nom', 'gen', 'dat', 'acc', 'ins', 'loc'];
+  const SG_CLASSES = ['m-anim', 'm-inan', 'f', 'n'];
+  const PL_CLASSES = ['vir', 'nonvir'];
+
+  const CASE_LABELS = {
+    nom: 'nominative', gen: 'genitive', dat: 'dative',
+    acc: 'accusative', ins: 'instrumental', loc: 'locative',
+  };
+  const CLASS_LABELS = {
+    'm-anim': 'masc. animate', 'm-inan': 'masc. inanimate', f: 'feminine', n: 'neuter',
+    vir: 'virile', nonvir: 'non-virile',
+  };
+
+  // Noun class tags (Polish grammatical tradition) → agreement class for the given number.
+  // Note that męskozwierzęcy nouns take NON-virile agreement in the plural (te koty).
+  const NOUN_CLASSES = ['męskoosobowy', 'męskozwierzęcy', 'męskorzeczowy', 'żeński', 'nijaki'];
+
+  function agreementClass(nounClass, number) {
+    if (number === 'pl') return nounClass === 'męskoosobowy' ? 'vir' : 'nonvir';
+    switch (nounClass) {
+      case 'męskoosobowy':
+      case 'męskozwierzęcy': return 'm-anim';
+      case 'męskorzeczowy': return 'm-inan';
+      case 'żeński': return 'f';
+      case 'nijaki': return 'n';
+      default: throw new Error('Unknown noun class: ' + nounClass);
+    }
+  }
+
+  /** All 36 cells of the grid: { number, agr, case, key }. */
+  function gridCells() {
+    const cells = [];
+    for (const number of ['sg', 'pl']) {
+      for (const agr of number === 'sg' ? SG_CLASSES : PL_CLASSES) {
+        for (const c of CASES) cells.push({ number, agr, case: c, key: cellKey(number, agr, c) });
+      }
+    }
+    return cells;
+  }
+
+  function cellKey(number, agr, c) {
+    return number + '.' + agr + '.' + c;
+  }
+
+  function cellLabel(cell) {
+    return cell.case.slice(0, 3) + '. ' + (cell.number === 'sg' ? 'sg. ' : 'pl. ') + CLASS_LABELS[cell.agr];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Determiners: stored in full rather than derived, since tamten is not simply
+  // "tam" + ten (acc. fem. is tę but tamtą).
+  // Row order per case: [m-anim, m-inan, f, n, vir, nonvir]
+  // ---------------------------------------------------------------------------
+  function rows(table) {
+    const out = {};
+    for (const c of CASES) {
+      const r = table[c];
+      out[c] = { 'm-anim': r[0], 'm-inan': r[1], f: r[2], n: r[3], vir: r[4], nonvir: r[5] };
+    }
+    return out;
+  }
+
+  const DETERMINERS = {
+    ten: {
+      gloss: 'this',
+      forms: rows({
+        nom: ['ten', 'ten', 'ta', 'to', 'ci', 'te'],
+        gen: ['tego', 'tego', 'tej', 'tego', 'tych', 'tych'],
+        dat: ['temu', 'temu', 'tej', 'temu', 'tym', 'tym'],
+        // Acc. fem. tę is the standard form; colloquial tą (= instr.) is not accepted here.
+        acc: ['tego', 'ten', 'tę', 'to', 'tych', 'te'],
+        ins: ['tym', 'tym', 'tą', 'tym', 'tymi', 'tymi'],
+        loc: ['tym', 'tym', 'tej', 'tym', 'tych', 'tych'],
+      }),
+    },
+    tamten: {
+      gloss: 'that',
+      forms: rows({
+        nom: ['tamten', 'tamten', 'tamta', 'tamto', 'tamci', 'tamte'],
+        gen: ['tamtego', 'tamtego', 'tamtej', 'tamtego', 'tamtych', 'tamtych'],
+        dat: ['tamtemu', 'tamtemu', 'tamtej', 'tamtemu', 'tamtym', 'tamtym'],
+        acc: ['tamtego', 'tamten', 'tamtą', 'tamto', 'tamtych', 'tamte'],
+        ins: ['tamtym', 'tamtym', 'tamtą', 'tamtym', 'tamtymi', 'tamtymi'],
+        loc: ['tamtym', 'tamtym', 'tamtej', 'tamtym', 'tamtych', 'tamtych'],
+      }),
+    },
+  };
+
+  function declineDeterminer(lemma, cell) {
+    const det = DETERMINERS[lemma];
+    if (!det) throw new Error('Unknown determiner: ' + lemma);
+    return det.forms[cell.case][cell.agr];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Adjectives
+  //
+  // Endings are written in their hard-stem shape; stem type rewrites them:
+  //   hard  (dobry):  as written
+  //   velar (wysoki): k/g cannot precede y or e orthographically → y→i, e→ie
+  //                   (wysokiego, wysokim, wysokie, wysokiej); a/ą unchanged (wysoka)
+  //   soft  (tani):   the i marks palatality and precedes every vowel ending
+  //                   (tania, tanią, taniego, tanim)
+  // The virile nom. pl. is special-cased: it palatalises the stem (VIR marker).
+  // Row order per case: [m-anim, m-inan, f, n, vir, nonvir]
+  // ---------------------------------------------------------------------------
+  const VIR = Symbol('virile-nom-pl');
+
+  const ADJ_ENDINGS = rows({
+    nom: ['y', 'y', 'a', 'e', VIR, 'e'],
+    gen: ['ego', 'ego', 'ej', 'ego', 'ych', 'ych'],
+    dat: ['emu', 'emu', 'ej', 'emu', 'ym', 'ym'],
+    acc: ['ego', 'y', 'ą', 'e', 'ych', 'e'],
+    ins: ['ym', 'ym', 'ą', 'ym', 'ymi', 'ymi'],
+    loc: ['ym', 'ym', 'ej', 'ym', 'ych', 'ych'],
+  });
+
+  const STEM_TYPES = ['hard', 'velar', 'soft'];
+
+  function inferStemType(lemma) {
+    if (/[kg]i$/.test(lemma)) return 'velar';
+    if (/i$/.test(lemma)) return 'soft';
+    if (/y$/.test(lemma)) return 'hard';
+    throw new Error('Cannot infer stem type for: ' + lemma);
+  }
+
+  function adjustEnding(ending, stemType) {
+    if (stemType === 'hard') return ending;
+    if (ending[0] === 'y') return 'i' + ending.slice(1);
+    if (stemType === 'velar') return ending[0] === 'e' ? 'i' + ending : ending;
+    return 'i' + ending; // soft
+  }
+
+  // Virile nom. pl.: stem-final consonant alternations before -i/-y.
+  // Longest match first. Unlisted consonants (n, w, b, p, m, …) just take -i.
+  const VIRILE_ALTERNATIONS = [
+    ['st', 'ści'], // czysty → czyści
+    ['sn', 'śni'], // jasny → jaśni
+    ['sł', 'śli'], // dorosły → dorośli
+    ['zł', 'źli'], // zły → źli
+    ['sz', 'si'],  // starszy → starsi
+    ['ch', 'si'],  // suchy → susi
+    ['ż', 'zi'],   // duży → duzi  (no bare z/zn rules: they'd hit the cz/rz digraphs)
+    ['r', 'rzy'],  // dobry → dobrzy
+    ['ł', 'li'],   // mały → mali
+    ['t', 'ci'],   // bogaty → bogaci
+    ['d', 'dzi'],  // młody → młodzi
+    ['s', 'si'],   // łysy → łysi
+    ['k', 'cy'],   // wysoki → wysocy, niski → niscy
+    ['g', 'dzy'],  // drogi → drodzy
+  ];
+
+  function virileNominative(adj) {
+    if (adj.virile) return adj.virile; // lexical exceptions, e.g. wesoły → weseli (o:e)
+    if (adj.stem === 'soft') return adj.lemma; // tani → tani
+    const stem = adj.lemma.slice(0, -1);
+    for (const [suffix, repl] of VIRILE_ALTERNATIONS) {
+      if (stem.endsWith(suffix)) return stem.slice(0, -suffix.length) + repl;
+    }
+    return stem + 'i';
+  }
+
+  /** adj: { lemma, stem: 'hard'|'velar'|'soft', virile?: string } */
+  function declineAdjective(adj, cell) {
+    const ending = ADJ_ENDINGS[cell.case][cell.agr];
+    if (ending === VIR) return virileNominative(adj);
+    return adj.lemma.slice(0, -1) + adjustEnding(ending, adj.stem);
+  }
+
+  /** The drilled unit: "determiner adjective" for one cell. */
+  function declinePair(detLemma, adj, cell) {
+    return declineDeterminer(detLemma, cell) + ' ' + declineAdjective(adj, cell);
+  }
+
+  const api = {
+    CASES, SG_CLASSES, PL_CLASSES, CASE_LABELS, CLASS_LABELS, NOUN_CLASSES, STEM_TYPES,
+    DETERMINERS,
+    agreementClass, gridCells, cellKey, cellLabel,
+    inferStemType, virileNominative,
+    declineDeterminer, declineAdjective, declinePair,
+  };
+
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else (root.MR = root.MR || {}).declension = api;
+})(this);

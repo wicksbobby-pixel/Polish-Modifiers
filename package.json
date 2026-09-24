@@ -1,0 +1,9 @@
+{
+  "name": "modifier-rush",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Timed drill for Polish determiner+adjective agreement in English frame sentences.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

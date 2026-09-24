@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier Rush</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <header>
+      <h1>Modifier Rush</h1>
+      <div id="hud" hidden>
+        <span>Round <b id="hud-round">1</b>/<b id="hud-total">20</b></span>
+        <span>Score <b id="hud-score">0</b></span>
+        <span>Streak <b id="hud-streak">0</b></span>
+      </div>
+    </header>
+
+    <section id="screen-start" class="screen">
+      <p class="lede">Pick the correctly declined <i>determiner + adjective</i> for each blank.
+        The English noun tells you gender, number and animacy; the Polish governor
+        under the blank tells you the case.</p>
+      <label class="rounds">Rounds
+        <select id="rounds">
+          <option value="12">12</option>
+          <option value="24" selected>24</option>
+          <option value="36">36 (full grid)</option>
+          <option value="72">72</option>
+        </select>
+      </label>
+      <button id="start" class="primary">Start <kbd>Enter</kbd></button>
+      <p class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> answer · <kbd>Space</kbd> continue · <kbd>G</kbd> toggle governor hints</p>
+    </section>
+
+    <section id="screen-play" class="screen" hidden>
+      <div class="timer"><div id="timer-bar"></div></div>
+      <p id="sentence" class="sentence"></p>
+      <div id="options" class="options"></div>
+      <p id="feedback" class="feedback" aria-live="polite"></p>
+    </section>
+
+    <section id="screen-end" class="screen" hidden>
+      <h2 id="end-title"></h2>
+      <p id="end-stats"></p>
+      <h3>This session’s grid</h3>
+      <table id="end-grid" class="grid"></table>
+      <div id="end-misses"></div>
+      <button id="again" class="primary">Again <kbd>Enter</kbd></button>
+    </section>
+  </main>
+
+  <script src="src/declension.js"></script>
+  <script src="src/data.js"></script>
+  <script src="src/engine.js"></script>
+  <script src="src/ui.js"></script>
+</body>
+</html>

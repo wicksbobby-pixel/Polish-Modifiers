@@ -1,0 +1,105 @@
+:root {
+  --bg: #f7f6f2;
+  --panel: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6b6b70;
+  --accent: #c8102e;      /* Polish red */
+  --ok: #1f8a4c;
+  --bad: #c62828;
+  --line: #e2e0da;
+  --blank: #efeee9;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151517;
+    --panel: #1f1f22;
+    --text: #ececef;
+    --muted: #9a9aa2;
+    --accent: #ff5a6e;
+    --ok: #4cc47f;
+    --bad: #ff6b6b;
+    --line: #333338;
+    --blank: #2a2a2e;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#app { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 1.4rem; margin: 0 0 16px; letter-spacing: -0.01em; }
+h1::before { content: ""; display: inline-block; width: 10px; height: 10px; background: var(--accent); border-radius: 2px; margin-right: 8px; }
+#hud { display: flex; gap: 16px; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+#hud b { color: var(--text); }
+
+.screen { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+.lede { margin-top: 0; }
+.rounds { display: block; margin: 16px 0; color: var(--muted); }
+.rounds select { margin-left: 8px; font: inherit; }
+.keys { color: var(--muted); font-size: 0.85rem; }
+
+kbd {
+  display: inline-block; min-width: 1.5em; padding: 0 5px; margin: 0 2px;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+  font: 0.8em ui-monospace, monospace; text-align: center; color: var(--muted);
+}
+
+button { font: inherit; cursor: pointer; }
+button.primary {
+  background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 18px;
+}
+button.primary kbd { color: #fff; border-color: rgba(255,255,255,.5); }
+
+.timer { height: 6px; background: var(--blank); border-radius: 3px; overflow: hidden; margin-bottom: 28px; }
+#timer-bar { height: 100%; width: 100%; background: var(--accent); }
+#timer-bar.low { background: var(--bad); }
+
+.sentence { font-size: 1.45rem; line-height: 2.8; margin: 0 0 24px; }
+.slot { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1.6; margin-top: 0.35em; }
+.fill {
+  display: inline-block; min-width: 5.5em; padding: 0 8px; text-align: center;
+  background: var(--blank); border-radius: 6px; border-bottom: 2px solid transparent;
+}
+.slot.initial .fill::first-letter { text-transform: uppercase; }
+.slot.active .fill { border-bottom-color: var(--accent); }
+.slot.right .fill { color: var(--ok); }
+.slot.wrong .fill { color: var(--bad); }
+.gov { font-size: 0.72rem; color: var(--muted); font-style: italic; line-height: 1.2; }
+.noun { margin-right: 0.1em; }
+
+.options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 520px) { .options { grid-template-columns: 1fr; } }
+.option {
+  padding: 14px 10px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font-size: 1.1rem;
+}
+.option:hover:not(:disabled) { border-color: var(--accent); }
+.option.right { border-color: var(--ok); color: var(--ok); }
+.option.wrong { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+.option:disabled { cursor: default; }
+
+.feedback { min-height: 1.6em; margin: 18px 0 0; }
+.feedback.ok { color: var(--ok); }
+.feedback.bad { color: var(--bad); cursor: pointer; }
+.feedback .hint { color: var(--muted); font-size: 0.85rem; }
+
+.grid { border-collapse: collapse; font-size: 0.85rem; font-variant-numeric: tabular-nums; width: 100%; }
+.grid th, .grid td { border: 1px solid var(--line); padding: 4px 6px; text-align: center; }
+.grid th { color: var(--muted); font-weight: 500; }
+.grid td.all { background: color-mix(in srgb, var(--ok) 22%, transparent); }
+.grid td.some { background: color-mix(in srgb, #e0a100 25%, transparent); }
+.grid td.none { background: color-mix(in srgb, var(--bad) 22%, transparent); }
+#screen-end h3 { margin-top: 24px; font-size: 1rem; }
+.misses { padding-left: 18px; }
+.misses li { margin: 4px 0; }
+#again { margin-top: 20px; }
+@media (max-width: 520px) { #end-grid { display: block; overflow-x: auto; } }
